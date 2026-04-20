@@ -46,19 +46,19 @@ class PengeluaranController extends Controller
         $request->validate([
             'id_barang' => 'required|exists:barang,id_barang',
             'jumlah_barang_dibeli' => 'required|integer|min:1',
-            'harga_per_pcs' => 'required|numeric|min:0',
+            'total_pengeluaran' => 'required|numeric|min:0',
         ], [
             'id_barang.required' => 'Pilih barang terlebih dahulu',
             'id_barang.exists' => 'Barang tidak ditemukan',
             'jumlah_barang_dibeli.required' => 'Jumlah harus diisi',
             'jumlah_barang_dibeli.min' => 'Jumlah minimal 1',
-            'harga_per_pcs.required' => 'Harga per pcs harus diisi',
-            'harga_per_pcs.numeric' => 'Harga harus berupa angka',
-            'harga_per_pcs.min' => 'Harga tidak boleh minus',
+            'total_pengeluaran.required' => 'Total harus diisi',
+            'total_pengeluaran.numeric' => 'Total harus berupa angka',
+            'total_pengeluaran.min' => 'Total tidak boleh minus',
         ]);
 
-        // Hitung total pengeluaran
-        $totalPengeluaran = $request->jumlah_barang_dibeli * $request->harga_per_pcs;
+        // Total pengeluaran langsung dari input
+        $totalPengeluaran = $request->total_pengeluaran;
 
         // Ambil barang
         $barang = Barang::findOrFail($request->id_barang);
@@ -93,19 +93,19 @@ class PengeluaranController extends Controller
         $request->validate([
             'id_barang' => 'required|exists:barang,id_barang',
             'jumlah_barang_dibeli' => 'required|integer|min:1',
-            'harga_per_pcs' => 'required|numeric|min:0',
+            'total_pengeluaran' => 'required|numeric|min:0',
         ], [
             'id_barang.required' => 'Pilih barang terlebih dahulu',
             'id_barang.exists' => 'Barang tidak ditemukan',
             'jumlah_barang_dibeli.required' => 'Jumlah harus diisi',
             'jumlah_barang_dibeli.min' => 'Jumlah minimal 1',
-            'harga_per_pcs.required' => 'Harga per pcs harus diisi',
-            'harga_per_pcs.numeric' => 'Harga harus berupa angka',
-            'harga_per_pcs.min' => 'Harga tidak boleh minus',
+            'total_pengeluaran.required' => 'Total harus diisi',
+            'total_pengeluaran.numeric' => 'Total harus berupa angka',
+            'total_pengeluaran.min' => 'Total tidak boleh minus',
         ]);
 
-        // Hitung total pengeluaran
-        $totalPengeluaran = $request->jumlah_barang_dibeli * $request->harga_per_pcs;
+        // Total pengeluaran langsung dari input
+        $totalPengeluaran = $request->total_pengeluaran;
 
         // Cari pengeluaran yang akan diupdate
         $pengeluaran = Pengeluaran::findOrFail($id);

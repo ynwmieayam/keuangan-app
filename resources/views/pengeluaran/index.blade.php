@@ -246,13 +246,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Harga per pcs :</label>
-                        <input type="number" name="harga_per_pcs" id="inputHargaPcs" min="0" step="0.01" required placeholder="Harga per pcs">
+                        <label>Total :</label>
+                        <input type="number" name="total_pengeluaran" id="inputTotal" min="0" step="0.01" required placeholder="Masukkan total pengeluaran">
                     </div>
 
                     <div class="form-group">
-                        <label>Total :</label>
-                        <input type="text" id="displayTotal" value="Rp 0" readonly>
+                        <label>Modal per pcs :</label>
+                        <input type="text" id="displayModalPerPcs" value="Rp 0" readonly>
                     </div>
 
                     <div class="button-group">
@@ -313,29 +313,34 @@
 
 @section('scripts')
 <script>
-    function updateTotal() {
+    function updateModalPerPcs() {
         const jumlah = parseInt(document.getElementById('inputJumlah').value) || 0;
-        const hargaPcs = parseFloat(document.getElementById('inputHargaPcs').value) || 0;
-        const total = jumlah * hargaPcs;
+        const total = parseFloat(document.getElementById('inputTotal').value) || 0;
+        
+        let modalPerPcs = 0;
+        if (jumlah > 0) {
+            modalPerPcs = total / jumlah;
+        }
 
-        document.getElementById('displayTotal').value = 'Rp ' + total.toLocaleString('id-ID');
+        document.getElementById('displayModalPerPcs').value = 'Rp ' + modalPerPcs.toLocaleString('id-ID', {
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        });
     }
 
-    document.getElementById('inputJumlah').addEventListener('input', updateTotal);
-    document.getElementById('inputHargaPcs').addEventListener('input', updateTotal);
+    document.getElementById('inputJumlah').addEventListener('input', updateModalPerPcs);
+    document.getElementById('inputTotal').addEventListener('input', updateModalPerPcs);
 
     function editPengeluaran(id, idBarang, jumlah, total) {
         document.querySelectorAll('tbody tr').forEach(row => row.classList.remove('selected'));
         document.querySelector(`tbody tr[data-id="${id}"]`).classList.add('selected');
 
-        const hargaPcs = total / jumlah;
-
         document.getElementById('pengeluaranId').value = id;
         document.getElementById('selectBarang').value = idBarang;
         document.getElementById('inputJumlah').value = jumlah;
-        document.getElementById('inputHargaPcs').value = hargaPcs;
+        document.getElementById('inputTotal').value = total;
 
-        updateTotal();
+        updateModalPerPcs();
 
         document.getElementById('pengeluaranForm').action = `/pengeluaran/${id}`;
         document.getElementById('formMethod').value = 'PUT';
@@ -352,7 +357,7 @@
         document.getElementById('btnSimpan').textContent = 'Simpan Data';
         document.getElementById('btnEdit').textContent = 'Edit Data';
         document.getElementById('pengeluaranId').value = '';
-        document.getElementById('displayTotal').value = 'Rp 0';
+        document.getElementById('displayModalPerPcs').value = 'Rp 0';
 
         document.querySelectorAll('tbody tr').forEach(row => row.classList.remove('selected'));
     }
