@@ -79,8 +79,7 @@
         letter-spacing: 0.5px;
         margin-bottom: 8px;
     }
-    .form-group input,
-    .form-group select {
+    .form-group input {
         width: 100%;
         padding: 10px;
         border: 1px solid #4a5d4a;
@@ -177,6 +176,24 @@
         font-family: 'Lato', sans-serif;
         font-style: italic;
     }
+
+    /* Info badge for new/existing */
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;
+        border-radius: 3px;
+        font-size: 0.8em;
+        font-weight: 600;
+        margin-left: 5px;
+    }
+    .badge-new {
+        background-color: #d4edda;
+        color: #155724;
+    }
+    .badge-update {
+        background-color: #cce5ff;
+        color: #004085;
+    }
 </style>
 @endsection
 
@@ -230,14 +247,8 @@
 
                     <div class="form-group">
                         <label>Nama Barang :</label>
-                        <select name="id_barang" id="selectBarang" required>
-                            <option value="">-- Pilih Barang --</option>
-                            @foreach($barangList as $barang)
-                                <option value="{{ $barang->id_barang }}">
-                                    {{ $barang->nama_barang }}
-                                </option>
-                            @endforeach
-                        </select>
+                        <input type="text" name="nama_barang" id="inputNamaBarang" placeholder="Masukkan nama barang" required>
+                        <small style="color: #666; font-size: 0.85em;">* Otomatis tambah barang baru atau update stok yang sudah ada</small>
                     </div>
 
                     <div class="form-group">
@@ -246,13 +257,13 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Total :</label>
-                        <input type="number" name="total_pengeluaran" id="inputTotal" min="0" step="0.01" required placeholder="Masukkan total pengeluaran">
+                        <label>Harga per pcs :</label>
+                        <input type="number" name="harga_per_pcs" id="inputHargaPcs" min="0" step="0.01" required placeholder="Harga per pcs">
                     </div>
 
                     <div class="form-group">
-                        <label>Modal per pcs :</label>
-                        <input type="text" id="displayModalPerPcs" value="Rp 0" readonly>
+                        <label>Total :</label>
+                        <input type="text" id="displayTotal" value="Rp 0" readonly>
                     </div>
 
                     <div class="button-group">
@@ -286,7 +297,7 @@
                                         ? $item->total_pengeluaran / $item->jumlah_barang_dibeli 
                                         : 0;
                                 @endphp
-                                <tr onclick="editPengeluaran({{ $item->id_pengeluaran }}, {{ $item->id_barang }}, {{ $item->jumlah_barang_dibeli }}, {{ $item->total_pengeluaran }})" data-id="{{ $item->id_pengeluaran }}">
+                                <tr onclick="editPengeluaran('{{ addslashes($item->barang->nama_barang ?? '') }}', {{ $item->id_pengeluaran }}, {{ $item->jumlah_barang_dibeli }}, {{ $item->total_pengeluaran }})" data-id="{{ $item->id_pengeluaran }}">
                                     <td>{{ $item->created_at->format('d-m-Y') }}</td>
                                     <td>{{ $item->barang->nama_barang ?? '-' }}</td>
                                     <td>{{ $item->jumlah_barang_dibeli }} pcs</td>
@@ -313,35 +324,38 @@
 
 @section('scripts')
 <script>
-    function updateModalPerPcs() {
+    // Auto calculate total
+    function updateTotal() {
         const jumlah = parseInt(document.getElementById('inputJumlah').value) || 0;
-        const total = parseFloat(document.getElementById('inputTotal').value) || 0;
+        const hargaPcs = parseFloat(document.getElementById('inputHargaPcs').value) || 0;
+        const total = jumlah * hargaPcs;
         
-        let modalPerPcs = 0;
-        if (jumlah > 0) {
-            modalPerPcs = total / jumlah;
-        }
-
-        document.getElementById('displayModalPerPcs').value = 'Rp ' + modalPerPcs.toLocaleString('id-ID', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
+        document.getElementById('displayTotal').value = 'Rp ' + total.toLocaleString('id-ID');
     }
 
-    document.getElementById('inputJumlah').addEventListener('input', updateModalPerPcs);
-    document.getElementById('inputTotal').addEventListener('input', updateModalPerPcs);
+    // Event listeners
+    document.getElementById('inputJumlah').addEventListener('input', updateTotal);
+    document.getElementById('inputHargaPcs').addEventListener('input', updateTotal);
 
-    function editPengeluaran(id, idBarang, jumlah, total) {
+    // Edit pengeluaran - klik row untuk edit
+    function editPengeluaran(namaBarang, id, jumlah, total) {
+        // Highlight selected row
         document.querySelectorAll('tbody tr').forEach(row => row.classList.remove('selected'));
         document.querySelector(`tbody tr[data-id="${id}"]`).classList.add('selected');
 
+        // Hitung harga per pcs dari total dan jumlah
+        const hargaPcs = total / jumlah;
+
+        // Fill form dengan data
         document.getElementById('pengeluaranId').value = id;
-        document.getElementById('selectBarang').value = idBarang;
+        document.getElementById('inputNamaBarang').value = namaBarang;
         document.getElementById('inputJumlah').value = jumlah;
-        document.getElementById('inputTotal').value = total;
+        document.getElementById('inputHargaPcs').value = hargaPcs;
 
-        updateModalPerPcs();
+        // Update total display
+        updateTotal();
 
+        // Ubah form action dan method untuk update
         document.getElementById('pengeluaranForm').action = `/pengeluaran/${id}`;
         document.getElementById('formMethod').value = 'PUT';
         document.getElementById('formTitle').textContent = 'EDIT PENGELUARAN';
@@ -349,6 +363,7 @@
         document.getElementById('btnEdit').textContent = 'Batal';
     }
 
+    // Reset form
     function resetForm() {
         document.getElementById('pengeluaranForm').reset();
         document.getElementById('pengeluaranForm').action = '{{ route('pengeluaran.store') }}';
@@ -357,8 +372,9 @@
         document.getElementById('btnSimpan').textContent = 'Simpan Data';
         document.getElementById('btnEdit').textContent = 'Edit Data';
         document.getElementById('pengeluaranId').value = '';
-        document.getElementById('displayModalPerPcs').value = 'Rp 0';
-
+        document.getElementById('displayTotal').value = 'Rp 0';
+        
+        // Remove highlight
         document.querySelectorAll('tbody tr').forEach(row => row.classList.remove('selected'));
     }
 </script>
